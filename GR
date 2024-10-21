@@ -1,0 +1,136 @@
+# Voir le texte suivant: Verma, M. (2017). Cluster based ranking index for enhancing recruitment process using text mining and machine learning. International Journal of Computer Applications, 157(9), 23-30.
+
+# Le code est stocké sur un notebook Google Collab.
+
+
+# V1: Cosine (Similarité) basé sur la méthode T(erm)F(requency)-I(inverse)D(ocument)F(requency)
+
+import pandas as pd
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+from sklearn.metrics.pairwise import cosine_similarity
+
+# Exemples de CVs et offres d'emploi
+cvs = ["Experienced software engineer with knowledge of Python and Java.", # CV1
+       "Data scientist with expertise in machine learning, Python, and R.", # CV2
+       "Assistant-diplômé et doctorant en administration publique spécialiste notamment de l’évaluation des politiques publiques, de management public et de gestion des ressources humaines, je suis à la recherche d’un nouveau défi professionnel au sein d’une organisation publique dynamique et innovante. Expériences professionnellesJuin 2020 – Présent Assistant-diplômé/doctorant,Institut de hautes études en administration publique (IDHEAP), Université de Lausanne Réalisation de mandats pour des organisations publiques centralisées et décentraliséesCharges d’enseignementEncadrement des étudiants et de hauts-fonctionnaires en formation continue de management public et GRHRéalisation d’une thèse de doctorat par articles scientifiques (cf. CV académique)Mai 2019 – Octobre 2019	Assistant de recherche Haute école de travail social (HETS), GenèveProjet : « La citoyenneté politique comme dimension de la qualité de vie » 2016 – 2020  Collaborateur administratif et scientifique Faculté de sciences politiques Université de Genève Juillet 2015	Collaborateur administratif Amadeus fiduciaire Juillet 2014	Collaborateur administratif Ville de Genève Emploi estival Juillet 2009, 2010, 2012 Collaborateur administratif État de Genève Service des automobiles et de la navigation 2009 – 2024 	Moniteur Jeunesse & Sports Judo Kwai Lancy, Genève Formation Assistant-diplômés/Doctorant Juin 2020 – Présent	Institut de hautes études en administration publique (IDHEAP), Université de Lausanne Directeurs de thèse : Prof. D. Giauque ; Prof. Y. Emery Master en management public Septembre 2018 – Mai 2020	Département de sciences politiques, Université de Genève Master en sciences politiques Septembre 2016 – Juin 2018	Département de sciences politiques, Université de Genève Bachelor en sciences politiques Septembre 2013 – Juin 2016	Département de sciences politiques, Université de Genève Compétences spécifiques Gestion de projets complexes 	Mandats d’enquêtes de satisfaction et d’évaluation des politiques pour des administrations publiques centralisées et décentralisées Aisance rédactionnelle Pigiste, Journal Jet d’Encre Rédaction d’articles dans des revues scientifiquesRédaction de rapports dans le cadre de la réalisation de mandats publics Expression orale Participation à des colloques et conférences internationales Enseignement des méthodes en sciences sociales, du management public et de la GRH publique Méthodes quantitatives	Méthodes quantitatives de première génération :Régressions linéaires Régressions logistiques Analyse de variance (ANOVA) Régressions multi-niveaux Analyses factorielles exploratoire (AFE) et confirmatoire (AFC) Analyses en composantes principales (ACP) Méthodes quantitatives de seconde génération : Modélisation par équations structurelles (PLS-SEM, CB-SEM) Machine learning (ML) pour sciences sociales Régression linéaire ML Arbres de classification (C5.0, CART, Random Forest, BART, XGBoost) Traitement du langage naturel (NLP) sur données textuelles (notamment analyse de sentiment et topic modeling) Méthodes mixtes Analyse qualitative comparée (QCA) Méthodes qualitatives Grounded theory Codage et analyse thématique Langues	Français : langue maternelle Anglais : C1 Allemand : B2 Qualités Rigueur Autonomie et sens des responsabilités Aisance rédactionnelle Sens du service public Leadership/Fédérateur Hobbys Littérature et essais Actualité politique suisse et internationale Cinéma Sports : judo, grimpe, trail, course à pied, surf, vélo Références Disponibles sur demande " # CV3
+       ]
+
+job_offers = ["Le département de l'économie et de l'emploi (DEE) contribue à la diversité et à l'équilibre du tissu économique local, ainsi que du marché de l'emploi et du travail. Il lutte de manière durable contre le chômage, promeut les conditions légales de travail et stimule l'entrepreneuriat, ainsi que l'innovation socialement responsables. La direction de l'organisation, de la sécurité de l'information, de la logistique, de la qualité et des risques du DEE (DOSIL) est une direction de support rattachée au secrétariat général (SG) du département. Sa mission est notamment de soutenir les offices du département dans l'élaboration de leur stratégie et de les accompagner avec un esprit de simplification, d'innovation et de performance dans l'évolution de leurs prestations. La DOSIL collabore activement avec les offices du département afin de les aider à saisir les opportunités offertes par la transition numérique et l'intelligence artificielle. Dans ce cadre, la DOSIL du DEE recherche une ou un responsable départemental de la gestion des risques, de la qualité et de la performance. Elle ou il sera amené à seconder le directeur de la DOSIL et se verra confier les missions suivantes : En tant que responsable de la performance du département, superviser le processus d'évaluation des politiques publiques liées à l'économie et à l'emploi pour garantir leur pertinence et leur efficacité. Préparer des rapports réguliers sur la performance économique et de l'emploi et présenter des recommandations innovantes pour l'optimisation des politiques publiques. En tant que responsable de la gestion des risques, de la qualité et du système de contrôle interne départemental, coordonner et conseiller sur la mise en œuvre, le maintien et le développement du système du contrôle interne (SCI). Elaborer, en collaboration avec le directeur de la DOSIL, le secrétaire général et les directions générales, la stratégie générale du département en matière de gestion des risques, de la qualité et contrôle interne. Assurer également l'encadrement fonctionnel de l'équipe gestion des risques et qualité du département. En tant que responsable de la continuité des activités du département, élaborer des plans de gestion des crises et de continuité d'activités et aider les offices du DEE à faire face efficacement à des événements imprévus tels que des catastrophes naturelles, des crises sanitaires ou des incidents de sécurité. Coordonner et assurer respectivement la réponse et le suivi des recommandations du service d’audit interne de l’Etat de Genève (SAI) et de la Cour des comptes (CdC) voire d’autres rapports d'organes de surveillance. Votre profilVous êtes titulaire d'un master universitaire dans le domaine des sciences politiques, de la finance, ou équivalent, complété idéalement par une formation certifiante dans les domaines de la gestion des risques et de la qualité. Une formation et une expérience professionnelle en évaluation de politique publique est souhaitée. Connaissances spécifiques : Capacité à diriger, fédérer, animer une équipe pluridisciplinaire. Compétences en matière d'analyse de données, d'analyse statistique et d'indicateurs. Précision et rigueur et sens de la qualité. Autonomie, flexibilité et sens des responsabilités. Très bonne capacité d'adaptation, d'organisation. Excellente capacité d'animation et de fédération d'équipes multi-profils. Parfaite maîtrise de la langue française et excellente capacité rédactionnelle. Esprit critique et constructif. Vos avantages Intégrer une administration publique dont les valeurs essentielles sont le respect, l'intégrité, l'impartialité et la disponibilité; où l'égalité entre hommes et femmes est garantie. Profiter de prestations sociales de qualité, développer des compétences grâce à une offre en formations continues importante et variée, et bénéficier de possibilités d'évolution.", # Description job 1
+              "We need a data scientist familiar with Python and machine learning." # Description job 2,
+              "Département du territoire , Secrétariat Général Rémunération classe 25 Taux d'activité 80 à 100% Type de contrat Contrat à durée indéterminée Délai d'inscription 15.11.2024 Entrée en fonction 01.01.2025 Votre mission Le département du territoire (DT) pilote le développement territorial du canton de Genève. En mettant en cohérence les politiques publiques de l'aménagement et du logement, de l'environnement et de l'énergie, ainsi que de la construction et de l'exploitation des bâtiments cantonaux, le département défend un développement maîtrisé, qualitatif et durable pour la Genève d'aujourd'hui et de demain. Dans ce cadre, le DT recherche sa future secrétaire générale adjointe ou son futur secrétaire général adjoint chargé d'assister le secrétaire général dans le pilotage général du département, le suivi des projets stratégiques départementaux, le contrôle de gestion, la maîtrise de la qualité, ainsi que la gestion administrative du secrétariat général. A ce titre, vous dirigerez en particulier la direction du pilotage et de la gestion des risques du département et vous pourrez être appelé à conduire divers projets stratégiques transversaux. En tant que membre des instances de direction du département, vous participerez à l'élaboration des politiques institutionnelles et des orientations générales du département Votre profil Vous êtes titulaire d'un master en sciences économiques ou équivalent, complété par une formation en gestion de projets et/ou en management organisationnel. Vous avez 3 à 5 ans d'expérience dans l'administration publique, en gestion de projets complexes ainsi que sur la gestion des risques. Vous maîtrisez les outils de pilotage et vous avez une forte capacité à questionner les modèles organisationnels pour les améliorer. Vous avez également une expérience confirmée en gestion d'équipe. Doté-e d'un fort intérêt pour les thématiques conduites par le département, vous avez une très bonne connaissance du fonctionnement des institutions politiques genevoises et suisses. Vous avez la capacité à percevoir les enjeux politiques et à négocier avec des partenaires de tous niveaux. Vous possédez de solides capacités d'analyse et de synthèse accompagnées d'une parfaite compétence rédactionnelle. Vous avez une forte résistance au stress et travaillez en toute autonomie. Une bonne maîtrise de l'allemand à l'oral et à l'écrit serait un atout. En cas d'engagement, il sera nécessaire de fournir une preuve d'équivalence pour les diplômes étrangers. Vos avantages Vous intégrerez une administration publique dont les valeurs essentielles sont le service public, le respect, l'intégrité, l'impartialité et la disponibilité et où l'égalité entre genres est garantie. Nous accordons la plus haute importance à l'égalité de traitement face à la diversité des parcours de vie des collaboratrices et collaborateurs. Dans ce sens, toutes les candidatures seront traitées avec bienveillance et équité.",
+              "Nous recherchons la meilleure personne de la terre"
+              ]
+
+# Créer une Term Document Matrix (TDM) avec TF-IDF
+vectorizer = TfidfVectorizer()
+all_documents = cvs + job_offers
+tfidf_matrix = vectorizer.fit_transform(all_documents)
+
+# Calculer la similarité entre chaque CV et offre d'emploi (cosine similarity)
+similarity_matrix = cosine_similarity(tfidf_matrix[:len(cvs)], tfidf_matrix[len(cvs):])
+
+# Afficher la similarité pour chaque CV par rapport à chaque offre
+similarity_df = pd.DataFrame(similarity_matrix, index=[f"CV {i+1}" for i in range(len(cvs))],
+                             columns=[f"Offre d'emploi {i+1}" for i in range(len(job_offers))])
+
+# Afficher les résultats
+print("Similarité entre CVs et offres d'emploi:")
+display(similarity_df)
+
+
+
+
+
+# V2 : Clustering (Elbow + k-means) + Cosine (Similarité) basé sur la méthode T(erm)F(requency)-I(inverse)D(ocument)F(requency)
+
+import pandas as pd
+import numpy as np
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
+from sklearn.metrics.pairwise import cosine_similarity
+import matplotlib.pyplot as plt
+
+# Exemples de CVs et offres d'emploi
+cvs = ["Experienced software engineer with knowledge of Python and Java.", # CV1
+       "Data scientist with expertise in machine learning, Python, and R.", # CV2
+       "Assistant-diplômé et doctorant en administration publique spécialiste notamment de l’évaluation des politiques publiques, de management public et de gestion des ressources humaines, je suis à la recherche d’un nouveau défi professionnel au sein d’une organisation publique dynamique et innovante. Expériences professionnellesJuin 2020 – Présent Assistant-diplômé/doctorant,Institut de hautes études en administration publique (IDHEAP), Université de Lausanne Réalisation de mandats pour des organisations publiques centralisées et décentraliséesCharges d’enseignementEncadrement des étudiants et de hauts-fonctionnaires en formation continue de management public et GRHRéalisation d’une thèse de doctorat par articles scientifiques (cf. CV académique)Mai 2019 – Octobre 2019	Assistant de recherche Haute école de travail social (HETS), GenèveProjet : « La citoyenneté politique comme dimension de la qualité de vie » 2016 – 2020  Collaborateur administratif et scientifique Faculté de sciences politiques Université de Genève Juillet 2015	Collaborateur administratif Amadeus fiduciaire Juillet 2014	Collaborateur administratif Ville de Genève Emploi estival Juillet 2009, 2010, 2012 Collaborateur administratif État de Genève Service des automobiles et de la navigation 2009 – 2024 	Moniteur Jeunesse & Sports Judo Kwai Lancy, Genève Formation Assistant-diplômés/Doctorant Juin 2020 – Présent	Institut de hautes études en administration publique (IDHEAP), Université de Lausanne Directeurs de thèse : Prof. D. Giauque ; Prof. Y. Emery Master en management public Septembre 2018 – Mai 2020	Département de sciences politiques, Université de Genève Master en sciences politiques Septembre 2016 – Juin 2018	Département de sciences politiques, Université de Genève Bachelor en sciences politiques Septembre 2013 – Juin 2016	Département de sciences politiques, Université de Genève Compétences spécifiques Gestion de projets complexes 	Mandats d’enquêtes de satisfaction et d’évaluation des politiques pour des administrations publiques centralisées et décentralisées Aisance rédactionnelle Pigiste, Journal Jet d’Encre Rédaction d’articles dans des revues scientifiquesRédaction de rapports dans le cadre de la réalisation de mandats publics Expression orale Participation à des colloques et conférences internationales Enseignement des méthodes en sciences sociales, du management public et de la GRH publique Méthodes quantitatives	Méthodes quantitatives de première génération :Régressions linéaires Régressions logistiques Analyse de variance (ANOVA) Régressions multi-niveaux Analyses factorielles exploratoire (AFE) et confirmatoire (AFC) Analyses en composantes principales (ACP) Méthodes quantitatives de seconde génération : Modélisation par équations structurelles (PLS-SEM, CB-SEM) Machine learning (ML) pour sciences sociales Régression linéaire ML Arbres de classification (C5.0, CART, Random Forest, BART, XGBoost) Traitement du langage naturel (NLP) sur données textuelles (notamment analyse de sentiment et topic modeling) Méthodes mixtes Analyse qualitative comparée (QCA) Méthodes qualitatives Grounded theory Codage et analyse thématique Langues	Français : langue maternelle Anglais : C1 Allemand : B2 Qualités Rigueur Autonomie et sens des responsabilités Aisance rédactionnelle Sens du service public Leadership/Fédérateur Hobbys Littérature et essais Actualité politique suisse et internationale Cinéma Sports : judo, grimpe, trail, course à pied, surf, vélo Références Disponibles sur demande " # CV3
+       "Marketing specialist with experience in digital advertising, SEO, and content creation. Looking for new challenges in a creative environment.",
+       "Project manager with over 10 years of experience in IT infrastructure and Agile methodologies. Excellent leadership and communication skills.",
+       "Financial analyst with expertise in corporate finance, risk management, and financial modeling. Fluent in Excel, Python, and SQL."
+       ]
+
+job_offers = ["Le département de l'économie et de l'emploi (DEE) contribue à la diversité et à l'équilibre du tissu économique local, ainsi que du marché de l'emploi et du travail. Il lutte de manière durable contre le chômage, promeut les conditions légales de travail et stimule l'entrepreneuriat, ainsi que l'innovation socialement responsables. La direction de l'organisation, de la sécurité de l'information, de la logistique, de la qualité et des risques du DEE (DOSIL) est une direction de support rattachée au secrétariat général (SG) du département. Sa mission est notamment de soutenir les offices du département dans l'élaboration de leur stratégie et de les accompagner avec un esprit de simplification, d'innovation et de performance dans l'évolution de leurs prestations. La DOSIL collabore activement avec les offices du département afin de les aider à saisir les opportunités offertes par la transition numérique et l'intelligence artificielle. Dans ce cadre, la DOSIL du DEE recherche une ou un responsable départemental de la gestion des risques, de la qualité et de la performance. Elle ou il sera amené à seconder le directeur de la DOSIL et se verra confier les missions suivantes : En tant que responsable de la performance du département, superviser le processus d'évaluation des politiques publiques liées à l'économie et à l'emploi pour garantir leur pertinence et leur efficacité. Préparer des rapports réguliers sur la performance économique et de l'emploi et présenter des recommandations innovantes pour l'optimisation des politiques publiques. En tant que responsable de la gestion des risques, de la qualité et du système de contrôle interne départemental, coordonner et conseiller sur la mise en œuvre, le maintien et le développement du système du contrôle interne (SCI). Elaborer, en collaboration avec le directeur de la DOSIL, le secrétaire général et les directions générales, la stratégie générale du département en matière de gestion des risques, de la qualité et contrôle interne. Assurer également l'encadrement fonctionnel de l'équipe gestion des risques et qualité du département. En tant que responsable de la continuité des activités du département, élaborer des plans de gestion des crises et de continuité d'activités et aider les offices du DEE à faire face efficacement à des événements imprévus tels que des catastrophes naturelles, des crises sanitaires ou des incidents de sécurité. Coordonner et assurer respectivement la réponse et le suivi des recommandations du service d’audit interne de l’Etat de Genève (SAI) et de la Cour des comptes (CdC) voire d’autres rapports d'organes de surveillance. Votre profilVous êtes titulaire d'un master universitaire dans le domaine des sciences politiques, de la finance, ou équivalent, complété idéalement par une formation certifiante dans les domaines de la gestion des risques et de la qualité. Une formation et une expérience professionnelle en évaluation de politique publique est souhaitée. Connaissances spécifiques : Capacité à diriger, fédérer, animer une équipe pluridisciplinaire. Compétences en matière d'analyse de données, d'analyse statistique et d'indicateurs. Précision et rigueur et sens de la qualité. Autonomie, flexibilité et sens des responsabilités. Très bonne capacité d'adaptation, d'organisation. Excellente capacité d'animation et de fédération d'équipes multi-profils. Parfaite maîtrise de la langue française et excellente capacité rédactionnelle. Esprit critique et constructif. Vos avantages Intégrer une administration publique dont les valeurs essentielles sont le respect, l'intégrité, l'impartialité et la disponibilité; où l'égalité entre hommes et femmes est garantie. Profiter de prestations sociales de qualité, développer des compétences grâce à une offre en formations continues importante et variée, et bénéficier de possibilités d'évolution.", # Description job 1
+              "We need a data scientist familiar with Python and machine learning." # Description job 2,
+              "Département du territoire , Secrétariat Général Rémunération classe 25 Taux d'activité 80 à 100% Type de contrat Contrat à durée indéterminée Délai d'inscription 15.11.2024 Entrée en fonction 01.01.2025 Votre mission Le département du territoire (DT) pilote le développement territorial du canton de Genève. En mettant en cohérence les politiques publiques de l'aménagement et du logement, de l'environnement et de l'énergie, ainsi que de la construction et de l'exploitation des bâtiments cantonaux, le département défend un développement maîtrisé, qualitatif et durable pour la Genève d'aujourd'hui et de demain. Dans ce cadre, le DT recherche sa future secrétaire générale adjointe ou son futur secrétaire général adjoint chargé d'assister le secrétaire général dans le pilotage général du département, le suivi des projets stratégiques départementaux, le contrôle de gestion, la maîtrise de la qualité, ainsi que la gestion administrative du secrétariat général. A ce titre, vous dirigerez en particulier la direction du pilotage et de la gestion des risques du département et vous pourrez être appelé à conduire divers projets stratégiques transversaux. En tant que membre des instances de direction du département, vous participerez à l'élaboration des politiques institutionnelles et des orientations générales du département Votre profil Vous êtes titulaire d'un master en sciences économiques ou équivalent, complété par une formation en gestion de projets et/ou en management organisationnel. Vous avez 3 à 5 ans d'expérience dans l'administration publique, en gestion de projets complexes ainsi que sur la gestion des risques. Vous maîtrisez les outils de pilotage et vous avez une forte capacité à questionner les modèles organisationnels pour les améliorer. Vous avez également une expérience confirmée en gestion d'équipe. Doté-e d'un fort intérêt pour les thématiques conduites par le département, vous avez une très bonne connaissance du fonctionnement des institutions politiques genevoises et suisses. Vous avez la capacité à percevoir les enjeux politiques et à négocier avec des partenaires de tous niveaux. Vous possédez de solides capacités d'analyse et de synthèse accompagnées d'une parfaite compétence rédactionnelle. Vous avez une forte résistance au stress et travaillez en toute autonomie. Une bonne maîtrise de l'allemand à l'oral et à l'écrit serait un atout. En cas d'engagement, il sera nécessaire de fournir une preuve d'équivalence pour les diplômes étrangers. Vos avantages Vous intégrerez une administration publique dont les valeurs essentielles sont le service public, le respect, l'intégrité, l'impartialité et la disponibilité et où l'égalité entre genres est garantie. Nous accordons la plus haute importance à l'égalité de traitement face à la diversité des parcours de vie des collaboratrices et collaborateurs. Dans ce sens, toutes les candidatures seront traitées avec bienveillance et équité.",
+              "Nous recherchons la meilleure personne de la terre",
+              "We are looking for a creative marketing professional to join our team. Responsibilities include managing online campaigns, SEO optimization, and content strategy development. Must have 5 years of experience in digital marketing.",
+              "Join our IT department as a project manager. You will lead teams working on infrastructure projects, using Agile methodologies. Experience in managing cross-functional teams is essential.",
+              "Looking for a financial analyst to support our corporate finance division. The ideal candidate should have strong analytical skills, experience in risk management, and advanced knowledge of financial modeling."
+              ]
+
+# Créer une Term Document Matrix (TDM) avec TF-IDF
+vectorizer = TfidfVectorizer()
+all_documents = cvs + job_offers
+tfidf_matrix = vectorizer.fit_transform(all_documents)
+
+# 1. Méthode du coude pour trouver le nombre optimal de clusters
+def plot_elbow_method(tfidf_matrix, max_clusters=None):
+    if max_clusters is None:
+        max_clusters = tfidf_matrix.shape[0]  # Limiter à nombre de documents si non spécifié
+    distortions = []
+    K = range(1, min(max_clusters+1, tfidf_matrix.shape[0] + 1))  # Limiter le nombre de clusters
+    for k in K:
+        kmeans = KMeans(n_clusters=k, random_state=42)
+        kmeans.fit(tfidf_matrix)
+        distortions.append(kmeans.inertia_)
+    
+    plt.figure(figsize=(8, 5))
+    plt.plot(K, distortions, 'bx-')
+    plt.xlabel('Nombre de clusters (k)')
+    plt.ylabel('Distorsion')
+    plt.title('Méthode du coude pour déterminer le k optimal')
+    plt.show()
+
+# Plot avec le nombre maximal de clusters limité au nombre de documents
+plot_elbow_method(tfidf_matrix)
+
+# 2. Appliquer K-means avec un nombre optimal de clusters
+optimal_clusters = 3  # Par exemple, après avoir visualisé la méthode du coude
+kmeans = KMeans(n_clusters=optimal_clusters, random_state=42)
+kmeans.fit(tfidf_matrix)
+
+# Assigner les clusters aux documents
+cluster_assignments = kmeans.labels_
+cvs_clusters = cluster_assignments[:len(cvs)]
+job_offers_clusters = cluster_assignments[len(cvs):]
+
+# 3. Calculer la similarité par clusters
+# Calculer la similarité uniquement entre CVs et offres d'emploi du même cluster
+similarity_df_list = []
+
+for cluster in range(optimal_clusters):
+    cluster_cvs_idx = np.where(cvs_clusters == cluster)[0]
+    cluster_jobs_idx = np.where(job_offers_clusters == cluster)[0]
+
+    if len(cluster_cvs_idx) > 0 and len(cluster_jobs_idx) > 0:
+        # Filtrer les CVs et offres d'emploi dans le même cluster
+        cluster_cvs = tfidf_matrix[cluster_cvs_idx, :]
+        cluster_jobs = tfidf_matrix[len(cvs) + cluster_jobs_idx, :]
+        
+        # Calculer la similarité pour les documents de ce cluster
+        cluster_similarity = cosine_similarity(cluster_cvs, cluster_jobs)
+        
+        # Créer un DataFrame pour ce cluster
+        cluster_similarity_df = pd.DataFrame(cluster_similarity, 
+                                             index=[f"CV {i+1}" for i in cluster_cvs_idx],
+                                             columns=[f"Offre d'emploi {i+1}" for i in cluster_jobs_idx])
+        
+        similarity_df_list.append(cluster_similarity_df)
+
+# 4. Afficher la similarité pour chaque cluster
+for idx, df in enumerate(similarity_df_list):
+    print(f"Cluster {idx + 1} - Similarité entre CVs et offres d'emploi :")
+    display(df)
+
+# Fin !
